@@ -1,49 +1,82 @@
-import { Navigation } from "react-native-navigation";
-import { Provider } from "react-redux";
+import React, { Component } from "react";
+import { StyleSheet, View } from "react-native";
 
-import AuthScreen from "./src/screens/Auth/Auth";
-import SharePlaceScreen from "./src/screens/SharePlace/SharePlace";
-import FindPlaceScreen from "./src/screens/FindPlace/FindPlace";
-import PlaceDetailScreen from "./src/screens/PlaceDetail/PlaceDetail";
-import SideDrawer from "./src/screens/SideDrawer/SideDrawer";
-import configureStore from "./src/store/configureStore";
+import PlaceInput from "./src/components/PlaceInput/PlaceInput";
+import PlaceList from "./src/components/PlaceList/PlaceList";
+import PlaceDetail from "./src/components/PlaceDetail/PlaceDetail";
 
-const store = configureStore();
+export default class App extends Component {
+  state = {
+    cars: [],
+    selectedCar: null
+  };
 
-// Register Screens
-Navigation.registerComponent(
-  "awesome-places.AuthScreen",
-  () => AuthScreen,
-  store,
-  Provider
-);
-Navigation.registerComponent(
-  "awesome-places.SharePlaceScreen",
-  () => SharePlaceScreen,
-  store,
-  Provider
-);
-Navigation.registerComponent(
-  "awesome-places.FindPlaceScreen",
-  () => FindPlaceScreen,
-  store,
-  Provider
-);
-Navigation.registerComponent(
-  "awesome-places.PlaceDetailScreen",
-  () => PlaceDetailScreen,
-  store,
-  Provider
-);
-Navigation.registerComponent(
-  "awesome-places.SideDrawer",
-  () => SideDrawer
-);
+  placeAddedHandler = placeName => {
+    this.setState(prevState => {
+      return {
+        cars: prevState.places.concat({
+          key: Math.random(),
+          name: placeName,
+          image: {
+            uri:
+              "https://www.beamng.com/attachments/1959_peugeot_403_front_resize-jpg"
+          }
+        })
+      };
+    });
+  };
 
-// Start a App
-Navigation.startSingleScreenApp({
-  screen: {
-    screen: "awesome-places.AuthScreen",
-    title: "Login"
+  placeDeletedHandler = () => {
+    this.setState(prevState => {
+      return {
+        cars: prevState.cars.filter(car => {
+          return car.key !== prevState.selectedCar.key;
+        }),
+        selectedCar: null
+      };
+    });
+  };
+
+  modalClosedHandler = () => {
+    this.setState({
+      selectedCar: null
+    });
+  };
+
+  placeSelectedHandler = key => {
+    this.setState(prevState => {
+      return {
+        selectedCar: prevState.cars.find(car => {
+          return car.key === key;
+        })
+      };
+    });
+  };
+
+  render() {
+    return (
+      <View style={styles.container}>
+        <PlaceDetail
+          selectedPlace={this.state.selectedCar}
+          onItemDeleted={this.placeDeletedHandler}
+          onModalClosed={this.modalClosedHandler}
+        />
+        <PlaceInput onPlaceAdded={this.placeAddedHandler} />
+        <PlaceList
+          places={this.state.places}
+          onItemSelected={this.placeSelectedHandler}
+        />
+      </View>
+    );
+  }
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 26,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "flex-start"
   }
 });
